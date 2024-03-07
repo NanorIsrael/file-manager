@@ -13,9 +13,9 @@ indexRouter.get('/status', AppController.getStatus);
 indexRouter.get('/stats', AppController.getStats);
 
 indexRouter.post('/users', UsersController.postNew);
-// indexRouter.post('/users/me', AuthController.getMe);
+indexRouter.get('/users/me', UsersController.getMe);
 
 indexRouter.get('/connect', AuthController.getConnect);
-// indexRouter.post('/disconnect', AuthController.getDisconnect);
+indexRouter.get('/disconnect', AuthController.getDisconnect);
 
 export default indexRouter;

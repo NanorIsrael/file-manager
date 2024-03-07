@@ -14,36 +14,54 @@ class AuthController {
     const [email, password] = credentials;
 
     if (!email || !password) {
-	  res.statusCode = 400;
-	  return res.json({ error: `Missing ${email ? 'password' : 'email'}` });
+      res.statusCode = 400;
+      return res.json({ error: `Missing ${email ? 'password' : 'email'}` });
     }
 
     try {
-	  const usersCollection = dbClient.db.collection('users');
-	  const user = await usersCollection.find({ email }).toArray();
+      const usersCollection = dbClient.db.collection('users');
+      const user = await usersCollection.find({ email }).toArray();
 
-	  if (!user.length) {
+      if (!user.length) {
         res.statusCode = 401;
         return res.json({ error: 'Unauthorized' });
-	  }
+      }
 
-	  const hashedpassword = hashPassword(password);
+      const hashedpassword = hashPassword(password);
 
-	  if (hashedpassword !== user[0].password) {
+      if (hashedpassword !== user[0].password) {
         res.statusCode = 401;
-        res.json({ error: 'password is incorrect' });
-	  }
+        return res.json({ error: 'password is incorrect' });
+      }
 
-	  const token = uuidv4();
-	  const expireTime = 24 * 60 * 60; // Current timestamp + 24 hours
-	  redisClient.set(`auth_${token}`, user[0]._id, expireTime);
+      const token = uuidv4();
+      const expireTime = 24 * 60 * 60; // Current timestamp + 24 hours
+      redisClient.set(`auth_${token}`, user[0]._id, expireTime);
 
-	  res.statusCode = 200;
-	  res.json({ token });
+      res.statusCode = 200;
+      res.json({ token });
     } catch (error) {
-      console.log(error);
-	  res.statusCode = 500;
-	  res.json({ message: 'An error occured' });
+      res.statusCode = 500;
+      res.json({ message: 'An error occured' });
+    }
+  }
+
+  static
+  async getDisconnect(req, res) {
+    const token = req.headers['x-token'];
+
+    try {
+      const userId = await redisClient.get(`auth_${token}`);
+      if (!userId) {
+        res.statusCode = 401;
+        return res.json({ error: 'Unauthorized' });
+      }
+	  await redisClient.del(`auth_${token}`);
+      res.statusCode = 204;
+      res.json();
+    } catch (error) {
+      res.statusCode = 500;
+      res.json({ error: 'An error occured' });
     }
   }
 }

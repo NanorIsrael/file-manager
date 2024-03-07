@@ -29,7 +29,7 @@ class RedisClient {
     await promisifiedClient(key, JSON.stringify(value), 'EX', expireTime);
   }
 
-  async det(key) {
+  async del(key) {
     const promisifiedClient = promisify(this.client.DEL).bind(this.client);
     await promisifiedClient(key);
   }
